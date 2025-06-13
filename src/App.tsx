@@ -12,7 +12,6 @@ import ListagemContas from "./pages/ListagemContas";
 import Transacoes from "./pages/Transacoes";
 import Extrato from "./pages/Extrato";
 import OfertasCredito from "./pages/OfertasCredito";
-import Consentimentos from "./pages/Consentimentos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +31,6 @@ const App = () => (
               <Route path="/transacoes" element={<Transacoes />} />
               <Route path="/extrato" element={<Extrato />} />
               <Route path="/ofertas" element={<OfertasCredito />} />
-              <Route path="/consentimentos" element={<Consentimentos />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

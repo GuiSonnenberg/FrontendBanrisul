@@ -5,7 +5,6 @@ import {
   criarOferta,
   atualizarOferta,
   excluirOferta,
-  buscarOfertasRecomendadas,
   OfertaCredito,
 } from '../services/banrisulApi';
 import { useToast } from '../hooks/use-toast';
@@ -17,15 +16,13 @@ import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { CreditCard, Plus, Edit, Trash2, Star, TrendingUp } from 'lucide-react';
+import { CreditCard, Plus, Edit, Trash2 } from 'lucide-react';
 
 const OfertasCredito: React.FC = () => {
   const [ofertas, setOfertas] = useState<OfertaCredito[]>([]);
-  const [ofertasRecomendadas, setOfertasRecomendadas] = useState<OfertaCredito[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const [ofertaEditando, setOfertaEditando] = useState<OfertaCredito | null>(null);
-  const [scoreConsulta, setScoreConsulta] = useState('');
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -49,35 +46,6 @@ const OfertasCredito: React.FC = () => {
       toast({
         title: "Erro",
         description: "Erro ao carregar ofertas",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const buscarRecomendacoes = async () => {
-    if (!scoreConsulta) {
-      toast({
-        title: "Erro",
-        description: "Digite um score para buscar recomendações",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const dados = await buscarOfertasRecomendadas(parseInt(scoreConsulta));
-      setOfertasRecomendadas(dados);
-      toast({
-        title: "Sucesso",
-        description: `${dados.length} ofertas recomendadas encontradas`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: "Erro ao buscar recomendações",
         variant: "destructive",
       });
     } finally {
@@ -199,7 +167,7 @@ const OfertasCredito: React.FC = () => {
           <CreditCard className="h-8 w-8 text-purple-600" />
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Ofertas de Crédito</h1>
-            <p className="text-gray-600">Gerencie ofertas e recomendações</p>
+            <p className="text-gray-600">Gerencie ofertas de crédito</p>
           </div>
         </div>
         
@@ -315,83 +283,107 @@ const OfertasCredito: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Busca de recomendações */}
+      {/* Formulário de criar ofertas */}
       <Card className="shadow-xl border-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Star className="h-6 w-6" />
-            <span>Buscar Recomendações por Score</span>
+            <Plus className="h-6 w-6" />
+            <span>Criar Nova Oferta</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                type="number"
-                value={scoreConsulta}
-                onChange={(e) => setScoreConsulta(e.target.value)}
-                placeholder="Digite o score (300-850)"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome-form" className="text-white">Nome da Oferta</Label>
+                <Input
+                  id="nome-form"
+                  value={formData.nome}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                  placeholder="Ex: Crédito Pessoal Premium"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="valor-form" className="text-white">Valor</Label>
+                <Input
+                  id="valor-form"
+                  type="number"
+                  step="0.01"
+                  value={formData.valor}
+                  onChange={(e) => setFormData(prev => ({ ...prev, valor: e.target.value }))}
+                  placeholder="50000.00"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="descricao-form" className="text-white">Descrição</Label>
+              <Textarea
+                id="descricao-form"
+                value={formData.descricao}
+                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Descreva os benefícios e condições da oferta"
                 className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
-                min="300"
-                max="850"
+                disabled={loading}
+                rows={3}
               />
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="taxaJuros-form" className="text-white">Taxa de Juros (%)</Label>
+                <Input
+                  id="taxaJuros-form"
+                  type="number"
+                  step="0.01"
+                  value={formData.taxaJuros}
+                  onChange={(e) => setFormData(prev => ({ ...prev, taxaJuros: e.target.value }))}
+                  placeholder="2.5"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="numeroParcelas-form" className="text-white">Nº Parcelas</Label>
+                <Input
+                  id="numeroParcelas-form"
+                  type="number"
+                  value={formData.numeroParcelas}
+                  onChange={(e) => setFormData(prev => ({ ...prev, numeroParcelas: e.target.value }))}
+                  placeholder="24"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="scoreMinimo-form" className="text-white">Score Mínimo</Label>
+                <Input
+                  id="scoreMinimo-form"
+                  type="number"
+                  value={formData.scoreMinimo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, scoreMinimo: e.target.value }))}
+                  placeholder="600"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-white/70"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            
             <Button 
-              onClick={buscarRecomendacoes}
+              type="submit"
               disabled={loading}
               variant="secondary"
               className="bg-white text-purple-600 hover:bg-white/90"
             >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Buscar
+              {loading ? <Loading size="sm" /> : 'Criar Oferta'}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
-
-      {/* Ofertas recomendadas */}
-      {ofertasRecomendadas.length > 0 && (
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Star className="h-6 w-6 text-yellow-500" />
-                <span>Ofertas Recomendadas (Score: {scoreConsulta})</span>
-              </div>
-              <Badge variant="secondary" className="text-lg px-3 py-1">
-                {ofertasRecomendadas.length} ofertas
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ofertasRecomendadas.map((oferta) => (
-                <div key={oferta.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">{oferta.nome}</h3>
-                    <Star className="h-5 w-5 text-yellow-500" />
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">{oferta.descricao}</p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Valor:</span>
-                      <span className="font-medium">{formatarValor(oferta.valor)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Taxa:</span>
-                      <span className="font-medium">{oferta.taxaJuros}% a.m.</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Parcelas:</span>
-                      <span className="font-medium">{oferta.numeroParcelas}x</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Lista de ofertas */}
       <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
